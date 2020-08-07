@@ -2,11 +2,22 @@
 # based on code of the riskgroup model (code extracted from jupyter notebook) with Author = "Nessma A. M. Yousif, Looli Alawam N., Pierre M. Ngougoue N., H. Christian Jr. Tsoungui Obama, Kristan. A. Schneider" Copyright = "Copyright 2020, COVID-19 Risk group model" Credits = "Hochschule Mittweida, University of Applied Sciences" license= "" Version="0.1" Maintainer = "H. Christian Jr. Tsoungui Obama" Email="htsoungl@hs-mitteida.de" Status="Developpement"
 # -*- coding: utf-8 -*-
 
+
+# This is the basic model.
+# It imports parameters (l 15) to organise the simulation of different scenarios (each to be saved with own name).
+# It saves the result to a textfile (last lines) [and some more things], that can be used for plotting etc.
+
 import numpy as np
 from scipy.integrate import solve_ivp
+import datetime
 
-from parameters_original import *
-from parameters_test4 import *  # to be changed for new parameters
+# Import parameters
+# these are stored in extra files to help keeping track of all scenarios
+# they include the parameter "name" to save the result of the scenario
+from parameters_new1 import *  # basic scenario (all parameters)
+from parameters_new_pdist2 import *  # to be changed for other scenarios (only the parameters that are different)
+
+dummy = -1000000  # technical variable without concrete meaning
 
 # General Functions
 # Summarized population: sum of entries of pop from start next length elements
@@ -14,6 +25,8 @@ def sumFromLength(pop, start, length):  #
     ind = [pop[i] for i in range(start, start + length)]
     return sum(ind)
 
+# Time tracking (may be omitted)
+timestart = datetime.datetime.now()
 
 ####################################################
 #           Short model description                #
@@ -47,7 +60,7 @@ def sumFromLength(pop, start, length):  #
 
 ### Model settings
 # Number of Erlang stages
-#! NE = NP = NI = NL = NM = 4  # 16
+#! NE = NP = NI = NL = NM = 16  # this is defined in parameters (copied here for explanation - same below).
 # number of stages per version
 NEPIL = NE + NP + NI + NL
 
@@ -123,7 +136,7 @@ alpha = NM / float(DE + DP)
 # Duration (interval during which measures are in place)
 #! tiso1 = 0  # 105  # [value from riskgroups]
 #! tiso2 = 365  # 180  # [value from riskgroups]
-# tiso = np.arange(tiso1, tiso2)
+
 
 # Probability that a sick patient is isolated
 #! fiso_s = 0.2  # [value from a version of riskgroups]
@@ -148,22 +161,23 @@ def Q(pop):
         )
     return x
 
-
 # Isolation in quarantine ward
+# fraction of compartments I, L that are in isolation ward
 def factorIso(t, mode, pop):
    Qt = Q(pop)
-   y = 0
-   if tiso1 <= t <= tiso2:
-        if mode != "m":
+   y = 0                    # if isolation is not in place, the fraction of isolated is 0
+   if tiso1 <= t <= tiso2:  # during this time interval, isolation is in place
+        if mode != "m":     # factor of sickness and isolation depends on if single or multiple infection
             y = fsick_s * fiso_s
         else:
             y = fsick_m * fiso_m
-        if Qt > Qmax:
+        if Qt > Qmax:       # if isolation wards are full, only those who find a place are isolated there
             y = y * Qmax / Qt
    return y
 
 
 # Home isolation (i.e., their effect)
+# fraction of compartments I, L that are in home isolation - actually, their effective number on contacts
 def factorHome(t, mode, pop):
     Qt = Q(pop)
     y = 0
@@ -177,6 +191,7 @@ def factorHome(t, mode, pop):
 
 
 # Not isolated, effectively spreading the disease
+# fraction of compartments I, L
 def factorEff(t, mode, pop):
     y = 1 - factorIso(t, mode, pop) - phome * factorHome(t, mode, pop)
     return y
@@ -184,12 +199,11 @@ def factorEff(t, mode, pop):
 
 ## General distancing
 # Duration interval
-#! tdist1 = 1  #  [value made up] # 105  # [value from riskgroups]
-#! tdist2 = 165  # [value from riskgroups]
+#! tdist1 = 1
+#! tdist2 = 165
 # Prevented fraction of contacts because of general social-distancing measures
-#! pdist = 0.75  # [value from a version of riskgroups]
+#! pdist = 0.75
 # resulting contact reduction
-# tdist = np.arange(tdist1, tdist2)  # interval of general distancing
 
 def pGen(t):  # in riskgroups: pcontGe
     if tdist1 <= t <= tdist2:
@@ -247,7 +261,7 @@ def lambda_m(t, pop):
     return x / N
 
 
-# general
+# general force of infection
 def l(t, pop):
     x = lambda_s(t, pop) + lambda_m(t, pop)
     return x
@@ -303,52 +317,52 @@ def superinf(t, pop):
 ####################################################
 # Functions with single ODE for certain departments, to be combined in pop below
 
-def dS(t, pop):
-    x = - l(t, pop) * pop[0]
+def dS(pop, var):
+    x = - var[14] * pop[0]
     return x
 
 # Single infected
-def ds1(t, pop):  #
+def ds1(pop, var, superi):
     x = - rate[1] * pop[1] \
-        + lambda_s(t, pop) * pop[0] \
-        - superinf(t, pop)[1] * pop[1]
+        + var[12] * pop[0] \
+        - superi[1] * pop[1]
     return x
 
 
-def ds(t, i, pop):  #
+def ds(i, pop, superi):
     x = rate[(i - 1)] * pop[i - 1] \
         - rate[i] * pop[i] \
-        - superinf(t, pop)[i] * pop[i]
+        - superi[i] * pop[i]
     return x
 
 
 # Latent multiple infected
-def dl1(t, pop):  #
+def dl1(pop, superi):
     i = NEPIL + 1
     x = - rate[i - NEPIL] * pop[i] \
-        + superinf(t, pop)[i - NEPIL] * pop[i - NEPIL] \
+        + superi[i - NEPIL] * pop[i - NEPIL] \
         - alpha * pop[i]
     return x
 
 
-def dl(t, i, pop): #
+def dl(i, pop, superi):
     x = rate[(i - 1) - NEPIL] * pop[i - 1] \
         - rate[i - NEPIL] * pop[i] \
-        + superinf(t, pop)[i - NEPIL] * pop[i - NEPIL] \
+        + superi[i - NEPIL] * pop[i - NEPIL] \
         - alpha * pop[i]
     return x
 
 
 # Multiple infected
-def dm1(t, pop): #
+def dm1(pop, var):
     i = 2 * NEPIL + 1
     x = - rate[i - 2 * NEPIL] * pop[i] \
-        + lambda_m(t, pop) * pop[0] \
+        + var[13] * pop[0] \
         + alpha * pop[i - NEPIL]
     return x
 
 
-def dm(t, i, pop): #
+def dm(i, pop): #
     x = rate[(i - 1) - 2 * NEPIL] * pop[i - 1] \
         - rate[i - 2 * NEPIL] * pop[i] \
         + alpha * pop[i - NEPIL]
@@ -368,30 +382,30 @@ def dDead(pop): #
     return x
 
 ####################################################
-#                Recording                         #
+#                Variables                         #
 ####################################################
 # Variables that are not compartments are kept track of explicitly (column)
 # for each day (row) - as solving is not done day-wise, this is just a rough estimate
 rec = [[dummy for i in np.arange(15 + 1 + NEPIL)] for j in np.arange(days + 1)]
 
-def record(t, pop):
+def variables(t, pop):
     x = [
-    R0(t),
-    betaP(t),
-    betaI(t),
-    betaL(t),
-    Q(pop),
-    factorIso(t, "s", pop),
-    factorIso(t, "m", pop),
-    factorHome(t, "s", pop),
-    factorHome(t, "m", pop),
-    factorEff(t, "s", pop),
-    factorEff(t, "m", pop),
-    pGen(t),
-    lambda_s(t, pop),
-    lambda_m(t, pop),
-    l(t, pop)] + \
-    superinf(t, pop)
+    R0(t),  #0
+    betaP(t),  #1
+    betaI(t),  #2
+    betaL(t),  #3
+    Q(pop),  #4
+    factorIso(t, "s", pop),  #5
+    factorIso(t, "m", pop),  #6
+    factorHome(t, "s", pop),  #7
+    factorHome(t, "m", pop),  #8
+    factorEff(t, "s", pop),  #9
+    factorEff(t, "m", pop),  #10
+    pGen(t),  #11
+    lambda_s(t, pop),  #12
+    lambda_m(t, pop), #13
+    l(t, pop)  #14
+    ]
     return x
 
 
@@ -405,24 +419,28 @@ def f(t, pop):
     # Initialize
     out = [0 for i in np.arange(1 + 3 * NEPIL + 2)]
 
-    ##Compartments
+    ## Variables
+    var = variables(t, pop)
+    superi = superinf(t, pop)
+
+    ## Compartments
     # Susceptible
-    out[0] = dS(t, pop)
+    out[0] = dS(pop, var)
 
     # Single infected
-    out[1] = ds1(t, pop)
+    out[1] = ds1(pop, var, superi)
     for i in range(2, 1 + NEPIL):
-        out[i] = ds(t, i, pop)
+        out[i] = ds(i, pop, superi)
 
     # Latent multiple infected
-    out[1 + NEPIL] = dl1(t, pop)
+    out[1 + NEPIL] = dl1(pop, superi)
     for i in range(2 + NEPIL, 1 + 2 * NEPIL):
-        out[i] = dl(t, i, pop)
+        out[i] = dl(i, pop, superi)
 
     # Multiple infected
-    out[1 + 2 * NEPIL] = dm1(t, pop)
+    out[1 + 2 * NEPIL] = dm1(pop, var)
     for i in range(2 + 2 * NEPIL, 1 + 3 * NEPIL):
-        out[i] = dm(t, i, pop)
+        out[i] = dm(i, pop)
 
     # Recovered
     out[1 + 3 * NEPIL] = dRecovered(pop)
@@ -430,7 +448,8 @@ def f(t, pop):
     out[1 + 3 * NEPIL + 1] = dDead(pop)
 
     # record parameters
-    rec[int(t)] = record(t,pop)
+    rec[int(t)] = var + superi
+    print(t)
     return out
 
 
@@ -441,15 +460,28 @@ def f(t, pop):
 pop0 = [0 for i in np.arange(1 + 3 * NEPIL + 2)]
 
 # All individuals are susceptible
-pop0[0] = N * (1 - E1_0)
-pop0[1] = N * E1_0
+pop0[0] = N - E1_0
+pop0[1] = E1_0
 
 # Solve
-soln = solve_ivp(f, [0,days], pop0, method="RK45")
+timestartODE = datetime.datetime.now()
+soln = solve_ivp(f, [0,days], pop0, method ="RK45",
+                 t_eval = np.arange(0, days),
+                 dense_output = True)
+timeendODE = datetime.datetime.now()
 
 ###################################################
 #               Save results                      #
 ###################################################
 np.savetxt("superinfection_solution_" + name + ".txt", soln.y)
+# np.savetxt("superinfection_time_" + name + ".txt", soln.t)
 np.savetxt("superinfection_parameters_" + name + ".txt", rec)
 
+timeend = datetime.datetime.now()
+
+file1 = open("superinfection_timeStamps_" + name + ".txt", "w")
+file1.writelines([str(timestart) + "   \n",
+                   str(timestartODE) + "   \n",
+                   str(timeendODE) + "   \n",
+                   str(timeend) + "   "])
+file1.close()
