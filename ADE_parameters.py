@@ -60,6 +60,13 @@ Qmax =
 tiso1 = 
 tiso2 =
 
+a =
+tROmax =
+R0bar =
+cP =  
+cI =  
+cL = 
+pCont = 
 
 def f_parameter(subscript, upperscript):
     if subscript == 'sick':

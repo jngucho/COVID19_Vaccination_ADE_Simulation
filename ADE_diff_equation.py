@@ -10,37 +10,37 @@ from ADE_functions_parameters import *
 
 # The dynamic of susceptible individuals is described by the following differential equations
 
-def dSNV(t, pop):
-    x = - (l(t, pop) + lext) * pop[index['S^NV']] / N
+def dSNV(t, pop, lambdat):
+    x = - (lambdat + lext) * pop[index['S^NV']] / N
     return x
 
-def dSU(t, pop):
-    x = - (l(t, pop) + lext) * pop[index['S^U']] / N - nu * pop[index['S^U']]
+def dSU(t, pop, lambdat):
+    x = - (lambdat + lext) * pop[index['S^U']] / N - nu * pop[index['S^U']]
     return x
     
-def dSV(t, pop):
-    x = nu * pop[index['S^U']] - (l(t, pop) + lext) * pop[index['S^V']]/N - alpha \
+def dSV(t, pop, lambdat):
+    x = nu * pop[index['S^U']] - (lambdat + lext) * pop[index['S^V']]/N - alpha \
         *pop[index['S^V']]
     return x
 
-def dSNI(t, pop):
-    x = alpha * fNI_S * pop[index['S^V']] - (l(t, pop) + lext) * pop[index['S^NI']] / N 
+def dSNI(t, pop, lambdat):
+    x = alpha * fNI_S * pop[index['S^V']] - (lambdat + lext) * pop[index['S^NI']] / N 
     return x
 
-def dSPI(t, pop):
-    x = alpha * fPI_S * pop[index['S^V']] - (l(t, pop) + lext) * pop[index['S^PI']] / N 
+def dSPI(t, pop, lambdat):
+    x = alpha * fPI_S * pop[index['S^V']] - (lambdat + lext) * pop[index['S^PI']] / N 
     return x
 
-def dSADE(t, pop):
-    x = alpha * fADE_S * pop[index['S^V']] - (l(t, pop) + lext) * pop[index['S^ADE']] / N 
+def dSADE(t, pop, lambdat):
+    x = alpha * fADE_S * pop[index['S^V']] - (lambdat + lext) * pop[index['S^ADE']] / N 
     return x
     
 
 # The dynamic of latent individuals is described by the following differential equations
 
-def dEU(t, k, pop):
+def dEU(t, k, pop, lambdat):
     if k == 1:
-        x = (l(t, pop) + lext) * pop[index['S^U']] / N - nu * pop[index['E^U_'+str(k)]] \
+        x = (lambdat + lext) * pop[index['S^U']] / N - nu * pop[index['E^U_'+str(k)]] \
             - epsilon * pop[index['E^U_'+str(k)]]
         return x
     else:
@@ -48,9 +48,9 @@ def dEU(t, k, pop):
             - nu * pop[index['E^U_'+str(k)]]
         return x
 
-def dEV(t, k, pop):
+def dEV(t, k, pop, lambdat):
     if k == 1:
-        x = (l(t, pop) + lext) * pop[index['S^V']] / N + nu * pop[index['E^U_'+str(k)]] \
+        x = (lambdat + lext) * pop[index['S^V']] / N + nu * pop[index['E^U_'+str(k)]] \
             - epsilon * pop[index['E^U_'+str(k)]] - alpha * pop[index['E^V_'+str(k)]]
         return x
     else:
@@ -58,9 +58,9 @@ def dEV(t, k, pop):
             - epsilon * pop[index['E^U_'+str(k)]] - alpha * pop[index['E^V_'+str(k)]]
         return x
 
-def dENI(t, k, pop):
+def dENI(t, k, pop, lambdat):
     if k == 1:
-        x = (l(t, pop) + lext) * (pop[index['S^NV']] + pop[index['S^NI']]) / N  \
+        x = (lambdat + lext) * (pop[index['S^NV']] + pop[index['S^NI']]) / N  \
             + alpha * fNI_E * pop[index['E^V_'+str(k)]] - epsilon * pop[index['E^NI_'+str(k)]]
         return x
     else:
@@ -68,9 +68,9 @@ def dENI(t, k, pop):
             pop[index['E^V_'+str(k)]] - epsilon * pop[index['E^NI_'+str(k)]]
         return x
 
-def dEPI(t, k, pop):
+def dEPI(t, k, pop, lambdat):
     if k == 1:
-        x = (l(t, pop) + lext) * pop[index['S^PI']] / N  \
+        x = (lambdat + lext) * pop[index['S^PI']] / N  \
             + alpha * fPI_E * pop[index['E^V_'+str(k)]] - epsilon * pop[index['E^PI_'+str(k)]]
         return x
     else:
@@ -78,9 +78,9 @@ def dEPI(t, k, pop):
             pop[index['E^V_'+str(k)]] - epsilon * pop[index['E^PI_'+str(k)]]
         return x
 
-def dEADE(t, k, pop):
+def dEADE(t, k, pop, lambdat):
     if k == 1:
-        x = (l(t, pop) + lext) * pop[index['S^ADE']] / N  \
+        x = (lambdat + lext) * pop[index['S^ADE']] / N  \
             + alpha * fADE_E * pop[index['E^V_'+str(k)]] - epsilon * pop[index['E^ADE_'+str(k)]]
         return x
     else:
@@ -90,7 +90,7 @@ def dEADE(t, k, pop):
 
 # The dynamic of prodromal individuals is described by the following differential equations
 
-def dPU(t, k, pop):
+def dPU(t, k, pop, lambdat):
     if k == 1:
         x = epsilon * pop[index['E^U_'+str(NE)]]  - varphi * pop[index['P^U_'+str(k)]] \
             - nu * pop[index['P^U_'+str(k)]]
@@ -100,7 +100,7 @@ def dPU(t, k, pop):
             - nu * pop[index['P^U_'+str(k)]]
         return x
 
-def dPV(t, k, pop):
+def dPV(t, k, pop, lambdat):
     if k == 1:
         x = epsilon * pop[index['E^V_'+str(NE)]]  + nu * varphi * pop[index['P^U_'+str(k)]] \
             - varphi * pop[index['P^V_'+str(k)]] - alpha * pop[index['P^V_'+str(k)]]
@@ -110,7 +110,7 @@ def dPV(t, k, pop):
             - varphi * pop[index['P^V_'+str(k)]] - alpha * pop[index['P^V_'+str(k)]]
         return x
         
-def dPNI(t, k, pop):
+def dPNI(t, k, pop, lambdat):
     if k == 1:
         x = epsilon * pop[index['E^NI_'+str(NE)]] + alpha * fNI_P * pop[index['P^V_'+str(k)]] \ 
             - varphi * pop[index['P^NI_'+str(k)]] 
@@ -120,7 +120,7 @@ def dPNI(t, k, pop):
             - varphi * pop[index['P^NI_'+str(k)]] 
         return x   
 
-def dPPI(t, k, pop):
+def dPPI(t, k, pop, lambdat):
     if k == 1:
         x = epsilon * pop[index['E^PI_'+str(NE)]] + alpha * fPI_P * pop[index['P^V_'+str(k)]] \ 
             - varphi * pop[index['P^PI_'+str(k)]] 
@@ -130,7 +130,7 @@ def dPPI(t, k, pop):
             - varphi * pop[index['P^PI_'+str(k)]] 
         return x   
         
-def dPADE(t, k, pop):
+def dPADE(t, k, pop, lambdat):
     if k == 1:
         x = epsilon * pop[index['E^ADE_'+str(NE)]] + alpha * fADE_P * pop[index['P^V_'+str(k)]] \ 
             - varphi * pop[index['P^ADE_'+str(k)]] 
@@ -142,7 +142,7 @@ def dPADE(t, k, pop):
         
 # The dynamic of fully infectious individuals is described by the following differential equations
 
-def dIUplus(t, k, pop):
+def dIUplus(t, k, pop, lambdat):
     if k == 1:
         x = varphi * (fsick + (1 - fsick) * fUplus_I) * pop[index['P^U_'+str(NP)]] \ 
             - gamma * pop[index['I^U+_'+str(k)]] 
@@ -151,7 +151,7 @@ def dIUplus(t, k, pop):
         x = gamma * pop[index['I^U+_'+str(k-1)]] - gamma * pop[index['I^U+_'+str(k)]]
         return x    
 
-def dIUminus(t, k, pop):
+def dIUminus(t, k, pop, lambdat):
     if k == 1:
         x = varphi * (1- fsick - fUplus_I + fsick * fUplus_I) * pop[index['P^U_'+str(NP)]] \ 
             - gamma * pop[index['I^U-_'+str(k)]] - nu * pop[index['I^U-_'+str(k)]]
@@ -161,7 +161,7 @@ def dIUminus(t, k, pop):
             - nu * pop[index['I^U-_'+str(k)]]
         return x 
         
-def dIV(t, k, pop):
+def dIV(t, k, pop, lambdat):
     if k == 1:
         x = varphi * pop[index['P^V_'+str(NP)]] - gamma * pop[index['I^V_'+str(k)]] \
             - alpha * pop[index['I^V_'+str(k)]]
@@ -171,7 +171,7 @@ def dIV(t, k, pop):
             - alpha * pop[index['I^V_'+str(k)]]
         return x        
 
-def dINI(t, k, pop):
+def dINI(t, k, pop, lambdat):
     if k == 1:
         x = varphi * pop[index['P^NI_'+str(NP)]] + alpha * fNI_I * pop[index['I^V_'+str(k)]] \
             - gamma * pop[index['I^NI_'+str(k)]]
@@ -181,7 +181,7 @@ def dINI(t, k, pop):
             - gamma * pop[index['I^NI_'+str(k)]]
         return x         
 
-def dIPI(t, k, pop):
+def dIPI(t, k, pop, lambdat):
     if k == 1:
         x = varphi * pop[index['P^PI_'+str(NP)]] + alpha * fPI_I * pop[index['I^V_'+str(k)]] \
             - gamma * pop[index['I^NI_'+str(k)]]
@@ -191,7 +191,7 @@ def dIPI(t, k, pop):
             - gamma * pop[index['I^PI_'+str(k)]]
         return x  
         
-def dIADE(t, k, pop):
+def dIADE(t, k, pop, lambdat):
     if k == 1:
         x = varphi * pop[index['P^ADE_'+str(NP)]] + alpha * fADE_I * pop[index['I^V_'+str(k)]] \
             - gamma * pop[index['I^ADE_'+str(k)]]
@@ -201,7 +201,7 @@ def dIADE(t, k, pop):
             - gamma * pop[index['I^ADE_'+str(k)]]
         return x          
 
-def dIIV(t, k, pop):
+def dIIV(t, k, pop, lambdat):
     if k == 1:
         x = nu * pop[index['I^U-_'+str(k)]] - gamma * pop[index['I^IV_'+str(NP)]] \
             - alpha * pop[index['I^IV_'+str(k)]] 
@@ -211,7 +211,7 @@ def dIIV(t, k, pop):
         - gamma * pop[index['I^IV_'+str(NP)]] - alpha * pop[index['I^IV_'+str(k)]]
         return x 
         
-def dIItilde(t, k, pop):
+def dIItilde(t, k, pop, lambdat):
     if k == 1:
         x = alpha * fItilde_I * pop[index['I^IV_'+str(k)]] - gamma * pop[index['I^Itilde_'+str(k)]]
         return x
@@ -220,7 +220,7 @@ def dIItilde(t, k, pop):
             pop[index['I^IV_'+str(k)]] - gamma * pop[index['I^Itilde_'+str(k)]]
         return x    
         
-def dIIstar(t, k, pop):
+def dIIstar(t, k, pop, lambdat):
     if k == 1:
         x = alpha * (1 - fItilde_I) * pop[index['I^IV_'+str(k)]] - gamma * \ 
             pop[index['I^Istar_'+str(k)]]
@@ -232,7 +232,7 @@ def dIIstar(t, k, pop):
 
 # The dynamic of late infectious individuals is described by the following differential equations
         
-def dLUplus(t, k, pop):
+def dLUplus(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^U+_'+str(NI)]] - delta * pop[index['L^U+_'+str(k)]] 
         return x
@@ -240,7 +240,7 @@ def dLUplus(t, k, pop):
         x = delta * pop[index['L^U+_'+str(k-1)]] - delta * pop[index['L^U+_'+str(k)]]
         return x   
         
-def dLUminus(t, k, pop):
+def dLUminus(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^U-_'+str(NI)]] - delta * pop[index['L^U-_'+str(k)]] \
             - nu * pop[index['L^U-_'+str(k)]]
@@ -250,7 +250,7 @@ def dLUminus(t, k, pop):
             - nu * pop[index['L^U-_'+str(k)]]
         return x         
         
-def dLV(t, k, pop):
+def dLV(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^V_'+str(NI)]] - delta * pop[index['L^V_'+str(k)]] \
             - alpha * pop[index['L^V_'+str(k)]]
@@ -260,7 +260,7 @@ def dLV(t, k, pop):
             - alpha * pop[index['L^V_'+str(k)]]
         return x          
 
-def dLNI(t, k, pop):
+def dLNI(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^NI_'+str(NI)]] + alpha * fNI_L * pop[index['L^V_'+str(k)]] \
             - delta * pop[index['L^NI_'+str(k)]]
@@ -270,7 +270,7 @@ def dLNI(t, k, pop):
             - delta * pop[index['L^NI_'+str(k)]]
         return x
         
-def dLPI(t, k, pop):
+def dLPI(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^PI_'+str(NI)]] + alpha * fPI_L * pop[index['L^V_'+str(k)]] \
             - delta * pop[index['L^PI_'+str(k)]]
@@ -280,7 +280,7 @@ def dLPI(t, k, pop):
             - delta * pop[index['L^PI_'+str(k)]]
         return x   
         
-def dLADE(t, k, pop):
+def dLADE(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^ADE_'+str(NI)]] + alpha * fADE_L * pop[index['L^V_'+str(k)]] \
             - delta * pop[index['L^ADE_'+str(k)]]
@@ -290,7 +290,7 @@ def dLADE(t, k, pop):
             - delta * pop[index['L^ADE_'+str(k)]]
         return x              
         
-def dLIV(t, k, pop):
+def dLIV(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^IV_'+str(NI)]] - delta * pop[index['L^IV_'+str(k)]] \
             - alpha * pop[index['L^IV_'+str(k)]]
@@ -300,7 +300,7 @@ def dLIV(t, k, pop):
             - alpha * pop[index['L^IV_'+str(k)]]
         return x         
                 
-def dLItilde(t, k, pop):
+def dLItilde(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^Itilde_'+str(NI)]] + alpha * fItilde_L * pop[index['L^IV_'+str(k)]] \
             - delta * pop[index['L^Itilde_'+str(k)]]
@@ -310,7 +310,7 @@ def dLItilde(t, k, pop):
             - delta * pop[index['L^Itilde_'+str(k)]] 
         return x  
         
-def dLIstar(t, k, pop):
+def dLIstar(t, k, pop, lambdat):
     if k == 1:
         x = gamma * pop[index['I^Istar_'+str(NI)]] + alpha * (1 - fItilde_L) * pop[index['L^IV_'+str(k)]] \
             - delta * pop[index['L^Istar_'+str(k)]]
@@ -320,7 +320,7 @@ def dLIstar(t, k, pop):
             - delta * pop[index['L^Istar_'+str(k)]]
         return x    
         
-def dLLV(t, k, pop):
+def dLLV(t, k, pop, lambdat):
     if k == 1:
         x = nu * pop[index['L^U-_'+str(k)]] - delta * pop[index['L^LV_'+str(k)]] \
             - alpha * pop[index['L^LV_'+str(k)]]
@@ -330,7 +330,7 @@ def dLLV(t, k, pop):
             - delta * pop[index['L^LV_'+str(k)]] - alpha * pop[index['L^LV_'+str(k)]] \
         return x         
                 
-def dLLtilde(t, k, pop):
+def dLLtilde(t, k, pop, lambdat):
     if k == 1:
         x = alpha * fLtilde_L * pop[index['L^LV_'+str(k)]] - delta * pop[index['L^Ltilde_'+str(k)]]
         return x
@@ -339,7 +339,7 @@ def dLLtilde(t, k, pop):
             - delta * pop[index['L^Ltilde_'+str(k)]] 
         return x  
         
-def dLIstar(t, k, pop):
+def dLIstar(t, k, pop, lambdat):
     if k == 1:
         x = alpha * (1 - fLtilde_L) * pop[index['L^LV_'+str(k)]] - delta * \
             pop[index['L^Lstar_'+str(k)]]
@@ -351,7 +351,7 @@ def dLIstar(t, k, pop):
 
 # The death toll over time is described by the following equations
 
-def dD(t, pop):
+def dD(t, pop, lambdat):
     dD1 = fUplus_sick * fdead * pop[index['L^U+_'+str(NL)]] + fsick * fdead * pop[index['L^V_'+str(NL)]] \
         fsick * fdead * pop[index['L^NI_'+str(NL)]] + fPI_sick * fPI_dead * pop[index['L^PI_'+str(NL)]]
     dD2 = fADE_sick * fADE_dead * pop[index['L^ADE_'+str(NL)]] + fIstar_sick * fIstar_dead * \
@@ -359,7 +359,7 @@ def dD(t, pop):
     return delta * (dD1 + dD2)
 
 # The dynamic in the recovered population is described by the following equations
-def dR(t, pop):
+def dR(t, pop, lambdat):
     dR1 = alpha * fR_S * pop[index['S^V']] + alpha * fR_E * popsum('E', 'V', NE, t, pop) + alpha * \
         fR_P * popsum('P', 'V', NP, t, pop) + alpha * fR_I * popsum('I', 'V', NI, t, pop) + alpha * fR_L * popsum('L', 'V', NL, t, pop) \
         + delta * (1 - fUplus_sick * fdead) * pop[index['L^U+_'+str(NL)]]
